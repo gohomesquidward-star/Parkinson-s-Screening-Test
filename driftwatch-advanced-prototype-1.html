@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DriftWatch: personal-baseline early screening prototype</title>
+<style>
+:root{
+  --ink:#0B2545; --ink2:#3C4E63; --mist:#EEF3F7; --paper:#fff; --line:#CFDBE6;
+  --teal:#0A7A75; --tealD:#086561; --tealT:#E2F3F2; --violet:#5B3FA8;
+  --green:#23744A; --greenBar:#3FA06A; --greenTint:#E4F3EA;
+  --amber:#9A5B00; --amberBar:#D9901A; --amberTint:#FBEFD9;
+  --red:#B83227; --redBar:#D2493C; --redTint:#F9E3E0;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--mist);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55}
+.wrap{max-width:600px;margin:0 auto;padding:14px 18px 36px}
+:focus-visible{outline:3px solid var(--violet);outline-offset:2px;border-radius:6px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0 12px}
+.brand{font-family:var(--serif);font-weight:700;font-size:21px;line-height:1.15}
+.brand small{display:block;font-family:var(--sans);font-weight:500;font-size:13px;color:var(--ink2)}
+.tabs{display:flex;gap:6px;background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:4px;margin:0 0 16px}
+.tabs button{flex:1;border:0;background:transparent;font:inherit;font-weight:600;font-size:16px;padding:9px 12px;border-radius:999px;color:var(--ink);cursor:pointer;min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+
+h1,h2,h3{font-family:var(--serif);line-height:1.15;letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(28px,8vw,40px);margin:6px 0 10px}
+h2{font-size:27px;margin:2px 0 8px}
+h3{font-size:19px;margin:0 0 4px}
+.lead{font-size:18px;color:var(--ink2);margin:0 0 16px}
+p{margin:0 0 12px}
+.fine{font-size:14px;color:var(--ink2);margin:8px 0 0}
+
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 14px}
+.panel p:last-child{margin-bottom:0}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 4px}
+.btn{font:inherit;font-weight:600;font-size:17px;min-height:52px;padding:12px 24px;border-radius:999px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--tealD);border-color:var(--tealD)}
+.btn.small{min-height:44px;padding:8px 16px;font-size:15px}
+.btn.text{border-color:transparent;background:transparent;text-decoration:underline;padding:10px 8px;min-height:44px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.msg{min-height:1.4em;color:var(--red);font-weight:600;margin:10px 0 0}
+
+.hero{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;margin:4px 0 12px}
+.hero svg{width:92px;height:92px}
+.hero .ghost{fill:none;stroke:var(--line);stroke-width:2.2;stroke-dasharray:1 5;stroke-linecap:round}
+.hero .draw{fill:none;stroke:var(--teal);stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.4s cubic-bezier(.3,.6,.3,1) .15s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.hero .draw{animation:none;stroke-dashoffset:0}}
+
+.check{display:flex;gap:12px;align-items:flex-start;margin:6px 0 4px;cursor:pointer}
+.check input{width:24px;height:24px;margin-top:2px;accent-color:var(--teal);flex:none}
+details.presenter{margin-top:22px;font-size:15px;color:var(--ink2)}
+details.presenter summary{cursor:pointer;padding:6px 0}
+
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
+.tile{text-align:left;font:inherit;padding:14px 14px 12px;border-radius:16px;border:2px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;min-height:118px;display:flex;flex-direction:column;gap:2px}
+.tile b{font-family:var(--serif);font-size:19px;line-height:1.2}
+.tile span{font-size:14px;color:var(--ink2)}
+.tile .st{margin-top:auto;font-weight:700;font-size:14px;color:var(--ink2)}
+.tile.done{border-color:var(--teal);background:var(--tealT)}
+.tile.done .st{color:var(--tealD)}
+
+.scope{background:var(--ink);border-radius:14px;padding:10px;margin:0 0 12px}
+.scope canvas{display:block;width:100%;height:150px}
+.status{color:#BFE9E5;font-size:15px;min-height:1.5em;padding:2px 4px 0}
+.timer{display:flex;align-items:center;gap:12px;margin:0 0 4px}
+.bar{flex:1;height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--teal)}
+.secs{font-family:var(--serif);font-size:26px;min-width:5.5em;text-align:right;font-variant-numeric:tabular-nums}
+.secs small{font-family:var(--sans);font-size:14px;color:var(--ink2)}
+
+.spiralbox{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:8px;margin:0 0 10px;display:flex;justify-content:center}
+.spiralbox canvas{touch-action:none;cursor:crosshair;border-radius:10px;background:#fff;display:block}
+.taps{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0 12px;user-select:none;-webkit-user-select:none}
+.tapbtn{aspect-ratio:1/1;border-radius:50%;border:4px solid var(--line);background:var(--paper);color:var(--ink2);touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tapbtn.next{border-color:var(--teal);background:var(--tealT)}
+.tapbtn:active{transform:scale(.97)}
+.hint{font-size:16px;color:var(--ink2);text-align:center;margin:0 0 8px}
+
+.qcount{color:var(--ink2);font-size:15px;margin:0 0 6px}
+.qtext{font-family:var(--serif);font-size:24px;line-height:1.3;margin:0 0 16px}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;font-size:19px;font-weight:600;text-align:left;padding:16px 18px;min-height:58px;border-radius:14px;border:2px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.opt[aria-checked="true"]{border-color:var(--teal);background:var(--tealT)}
+
+.done{background:var(--greenTint);border-radius:14px;padding:14px 16px;margin:10px 0 0}
+.done strong{display:block;color:var(--green)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 16px;margin:6px 0 0;font-size:15px}
+.kv dt{color:var(--ink2)} .kv dd{margin:0;font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+
+.banner{border-radius:14px;padding:14px 16px;margin:0 0 14px;font-weight:600}
+.banner small{display:block;font-weight:500;margin-top:4px}
+.banner.building,.banner.ready{background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+.banner.stable{background:var(--greenTint);color:var(--green)}
+.banner.watch{background:var(--amberTint);color:var(--amber)}
+.banner.review{background:var(--redTint);color:var(--red)}
+.banner.sim{background:var(--amberTint);color:var(--amber);font-weight:600}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.controls label{font-size:15px;color:var(--ink2)}
+select{font:inherit;padding:9px 12px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);min-height:44px}
+.dgrid{display:grid;gap:10px;margin:0 0 14px}
+.dcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.dcard.flag{border-color:var(--redBar);background:#FFF9F8}
+.dhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.dname{font-weight:700}
+.tag{font-size:14px;font-weight:700}
+.tag.ok{color:var(--green)} .tag.warn{color:var(--red)} .tag.na{color:var(--ink2)}
+.dnum{font-size:14px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.dcard svg{width:100%;height:auto;display:block;margin-top:6px}
+.dcard details{margin-top:4px} .dcard summary{cursor:pointer;font-size:15px;color:var(--ink2);padding:4px 0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{text-align:right;padding:3px 4px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-weight:600;color:var(--ink2)}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;margin:6px 0 10px}
+.flow span{border:1.5px solid var(--teal);border-radius:999px;padding:5px 12px;background:#fff}
+.flow b{color:var(--teal)}
+.log{list-style:none;margin:8px 0 0;padding:0;font-size:14px}
+.log li{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.log li span:first-child{overflow-wrap:anywhere}
+ul.plain{margin:6px 0 0;padding-left:20px} ul.plain li{margin:3px 0}
+.foot{margin-top:26px;font-size:14px;color:var(--ink2);text-align:center}
+
+@media print{
+  body{background:#fff}
+  .tabs,.actions,.controls,.foot,details.presenter,[data-back]{display:none!important}
+  .panel,.dcard{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+'use strict';
+
+/* ================================================================
+   ANALYSIS: pure functions, no DOM. Everything here is original code
+   written for this prototype using standard, published signal-processing
+   ideas. No datasets, AI models or external services are used.
+   Thresholds and drift settings are illustrative, NOT clinically validated.
+   ================================================================ */
+/* ANALYSIS-START */
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const clamp01 = x => clamp(x, 0, 1);
+const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
+const sdp = a => { const m = mean(a); return Math.sqrt(mean(a.map(v => (v - m) * (v - m)))); };          // population SD
+const sds = a => { if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1)); }; // sample SD
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+/* ---------- seeded random numbers (for simulators and tests) ---------- */
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function gaussR(rng) { let u = 0; while (u === 0) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()); }
+
+/* ---------- signal helpers ---------- */
+function resampleUniform(t, v, fs) {           // t in seconds (ascending) -> uniform grid at fs
+  const N = Math.floor((t[t.length - 1] - t[0]) * fs), out = new Float64Array(N);
+  let k = 0;
+  for (let i = 0; i < N; i++) {
+    const tt = t[0] + i / fs;
+    while (k < t.length - 2 && t[k + 1] < tt) k++;
+    const t0 = t[k], t1 = t[k + 1], w = t1 > t0 ? clamp01((tt - t0) / (t1 - t0)) : 0;
+    out[i] = v[k] * (1 - w) + v[k + 1] * w;
+  }
+  return out;
+}
+function highpassMA(x, fs, winSec) {           // subtract a centred moving average
+  const n = x.length, w = Math.max(1, Math.round(winSec * fs)), cs = new Float64Array(n + 1), out = new Float64Array(n);
+  for (let i = 0; i < n; i++) cs[i + 1] = cs[i] + x[i];
+  for (let i = 0; i < n; i++) { const a = Math.max(0, i - (w >> 1)), b = Math.min(n, i + (w >> 1) + 1); out[i] = x[i] - (cs[b] - cs[a]) / (b - a); }
+  return out;
+}
+function dftAmp(x, fs, freqs) {                // Hann-windowed single-sided amplitude at chosen frequencies
+  const N = x.length, w = new Float64Array(N);
+  let ws = 0;
+  for (let i = 0; i < N; i++) { w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)); ws += w[i]; }
+  return freqs.map(f => {
+    let re = 0, im = 0; const om = 2 * Math.PI * f / fs;
+    for (let i = 0; i < N; i++) { const xv = x[i] * w[i]; re += xv * Math.cos(om * i); im -= xv * Math.sin(om * i); }
+    return 2 * Math.hypot(re, im) / ws;
+  });
+}
+
+/* ---------- voice: pitch by normalised autocorrelation ---------- */
+function detectPitch(buf, sr) {
+  const n = buf.length;
+  let e = 0;
+  for (let i = 0; i < n; i++) e += buf[i] * buf[i];
+  const rms = Math.sqrt(e / n);
+  if (rms < 0.012) return { f0: 0, rms, conf: 0 };
+  const minLag = Math.floor(sr / 400), maxLag = Math.min(Math.floor(sr / 70), (n >> 1) - 2), w = n - maxLag - 1;
+  let e0 = 0;
+  for (let i = 0; i < w; i++) e0 += buf[i] * buf[i];
+  const corr = new Float32Array(maxLag + 2);
+  let gmax = 0;
+  for (let lag = minLag; lag <= maxLag; lag++) {
+    let s = 0, e1 = 0;
+    for (let i = 0; i < w; i++) { const b = buf[i + lag]; s += buf[i] * b; e1 += b * b; }
+    const c = s / Math.sqrt(e0 * e1 + 1e-12);
+    corr[lag] = c; if (c > gmax) gmax = c;
+  }
+  if (gmax < 0.6) return { f0: 0, rms, conf: gmax };
+  let best = -1;
+  for (let lag = minLag + 1; lag < maxLag; lag++) {
+    if (corr[lag] >= 0.9 * gmax && corr[lag] > corr[lag - 1] && corr[lag] >= corr[lag + 1]) { best = lag; break; }
+  }
+  if (best < 0) return { f0: 0, rms, conf: gmax };
+  const a = corr[best - 1], b = corr[best], c = corr[best + 1], den = a - 2 * b + c;
+  return { f0: sr / (best + (den !== 0 ? 0.5 * (a - c) / den : 0)), rms, conf: b };
+}
+function analyzeVoice(frames, dt) {              // frames = [{rms, f0}] every dt seconds
+  const voiced = frames.filter(f => f.f0 > 0), voicedSec = voiced.length * dt, diffs = [], f0s = [];
+  for (let i = 0; i < frames.length; i++) {
+    if (frames[i].f0 > 0) f0s.push(frames[i].f0);
+    if (i > 0 && frames[i].f0 > 0 && frames[i - 1].f0 > 0) {
+      const r = frames[i].f0 / frames[i - 1].f0;
+      if (Math.abs(r - 1) < 0.2) diffs.push(Math.abs(frames[i].f0 - frames[i - 1].f0));
+    }
+  }
+  if (voicedSec < 3 || diffs.length < 40) return { error: 'short', voicedSec };
+  const idx = frames.map((f, i) => f.f0 > 0 ? i : -1).filter(i => i >= 0), first = idx[0], last = idx[idx.length - 1];
+  const trim = Math.floor((last - first) * 0.1);
+  const core = frames.slice(first + trim, last - trim + 1).filter(f => f.f0 > 0).map(f => f.rms);
+  const f0Mean = mean(f0s);
+  return { pitchInstab: mean(diffs) / f0Mean * 100, loudCV: core.length > 5 ? sdp(core) / mean(core) * 100 : 0, f0Mean, voicedSec };
+}
+
+/* ---------- spiral drawing ---------- */
+function analyzeSpiral(pts, size) {              // pts = [{x, y, t(ms)}] in CSS px on a size x size canvas
+  const cx = size / 2, cy = size / 2;
+  const P = pts.filter(p => Math.hypot(p.x - cx, p.y - cy) > size * 0.04);
+  if (P.length < 40) return { error: 'short' };
+  const th = [];
+  let prev = Math.atan2(P[0].y - cy, P[0].x - cx), acc = prev;
+  th.push(acc);
+  for (let i = 1; i < P.length; i++) {
+    const a = Math.atan2(P[i].y - cy, P[i].x - cx);
+    let d = a - prev;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    acc += d; prev = a; th.push(acc);
+  }
+  const total = th[th.length - 1] - th[0], dir = total >= 0 ? 1 : -1, turns = Math.abs(total) / (2 * Math.PI);
+  const dur = (P[P.length - 1].t - P[0].t) / 1000;
+  if (turns < 1 || dur < 3) return { error: 'short', turns, dur };
+  const phi = th.map(v => (v - th[0]) * dir), r = P.map(p => Math.hypot(p.x - cx, p.y - cy));
+  const n = P.length, mp = mean(phi), mr = mean(r);
+  let sxx = 0, sxy = 0;
+  for (let i = 0; i < n; i++) { sxx += (phi[i] - mp) ** 2; sxy += (phi[i] - mp) * (r[i] - mr); }
+  const b = sxx > 0 ? sxy / sxx : 0, a = mr - b * mp;
+  const e = r.map((v, i) => v - (a + b * phi[i]));
+  const half = Math.PI / 8, ed = new Array(n);   // short moving average removes slow off-centre drift, keeps wobble and tremor
+  for (let i = 0; i < n; i++) {
+    let s = 0, c = 0;
+    for (let j = i; j >= 0 && phi[i] - phi[j] <= half; j--) { s += e[j]; c++; }
+    for (let j = i + 1; j < n && phi[j] - phi[i] <= half; j++) { s += e[j]; c++; }
+    ed[i] = e[i] - s / c;
+  }
+  const irreg = Math.sqrt(mean(ed.map(v => v * v))) / mr * 100;
+  const fs = 50, T = P.map(p => (p.t - P[0].t) / 1000), N = Math.floor(dur * fs), x = new Float64Array(N);
+  let k = 0;
+  for (let i = 0; i < N; i++) {
+    const tt = i / fs;
+    while (k < n - 2 && T[k + 1] < tt) k++;
+    const t0 = T[k], t1 = T[k + 1], wgt = t1 > t0 ? clamp01((tt - t0) / (t1 - t0)) : 0;
+    x[i] = ed[k] * (1 - wgt) + ed[k + 1] * wgt;
+  }
+  const mx = mean(Array.from(x)); for (let i = 0; i < N; i++) x[i] -= mx;
+  const freqs = []; for (let f = 4; f <= 8.001; f += 0.25) freqs.push(f);
+  const amps = dftAmp(x, fs, freqs);
+  let peak = 0, peakHz = 0; amps.forEach((v, i) => { if (v > peak) { peak = v; peakHz = freqs[i]; } });
+  return { irreg, tremorPct: peak / size * 100, tremorHz: peakHz, turns, dur };
+}
+
+/* ---------- finger tapping ---------- */
+function analyzeTap(times, errors) {             // times = ms timestamps of correct alternating taps
+  const n = times.length;
+  if (n < 12) return { error: 'short', n };
+  const iv = [];
+  for (let i = 1; i < n; i++) iv.push(times[i] - times[i - 1]);
+  const span = (times[n - 1] - times[0]) / 1000, t0 = times[0];
+  const c1 = times.filter(t => (t - t0) / 1000 < span / 3).length, c3 = times.filter(t => (t - t0) / 1000 >= 2 * span / 3).length;
+  const med = median(iv);
+  return { rate: (n - 1) / span, cv: sdp(iv) / mean(iv), decr: c1 > 0 ? (c1 - c3) / c1 * 100 : 0, pauses: iv.filter(v => v > Math.max(2 * med, 500)).length, n, errors, span };
+}
+
+/* ---------- hand tremor from a 3-axis accelerometer (samples in m/s^2) ---------- */
+function analyzeTremor(samples) {
+  if (samples.length < 200) return { error: 'short' };
+  const t = samples.map(s => (s.t - samples[0].t) / 1000), dur = t[t.length - 1], rate = (samples.length - 1) / dur;
+  if (dur < 8 || rate < 30) return { error: 'short', dur, rate };
+  const fs = 50, freqs = []; for (let f = 0.5; f <= 15.001; f += 0.25) freqs.push(f);
+  const P = new Float64Array(freqs.length);
+  for (const ax of ['x', 'y', 'z']) {
+    let x = resampleUniform(t, samples.map(s => s[ax]), fs);
+    x = highpassMA(x, fs, 1.0);
+    x = x.slice(fs, x.length - fs);                                  // drop 1 s edge effects
+    if (x.length < 200) return { error: 'short' };
+    dftAmp(x, fs, freqs).forEach((a, i) => { P[i] += a * a; });      // combine axes as vector power
+  }
+  let peak = 0, peakHz = 0, band = 0, total = 0;
+  freqs.forEach((f, i) => { if (f >= 4 && f <= 6.5) { band += P[i]; if (P[i] > peak) { peak = P[i]; peakHz = f; } } total += P[i]; });
+  return { tremorAmp: Math.sqrt(peak) / 9.80665 * 1000, tremorHz: peakHz, tremorRatio: total > 0 ? band / total : 0, dur, rate };   // amplitude in milli-g
+}
+
+/* ---------- walking: step and stride regularity from acceleration magnitude ---------- */
+function analyzeGait(samples) {
+  if (samples.length < 300) return { error: 'short' };
+  const t = samples.map(s => (s.t - samples[0].t) / 1000), dur = t[t.length - 1], rate = (samples.length - 1) / dur;
+  if (dur < 15 || rate < 30) return { error: 'short', dur, rate };
+  const fs = 50;
+  let x = resampleUniform(t, samples.map(s => Math.hypot(s.x, s.y, s.z)), fs);
+  x = highpassMA(x, fs, 2.0);
+  x = x.slice(3 * fs, x.length - 3 * fs);                            // drop start/stop transients
+  const N = x.length;
+  if (N < 8 * fs) return { error: 'short' };
+  const mx = mean(Array.from(x)); for (let i = 0; i < N; i++) x[i] -= mx;
+  const maxLag = Math.min(Math.round(3 * fs), N - 20), ac = new Float64Array(maxLag + 2);
+  for (let l = 0; l <= maxLag; l++) { let s = 0; for (let i = 0; i + l < N; i++) s += x[i] * x[i + l]; ac[l] = s / (N - l); }   // unbiased autocorrelation
+  const r0 = ac[0];
+  if (!(r0 > 1e-9)) return { error: 'flat' };
+  for (let l = 0; l <= maxLag; l++) ac[l] /= r0;
+  const peakIn = (a, b) => {
+    let best = -1, bv = -Infinity;
+    for (let l = Math.max(1, a); l <= Math.min(b, maxLag - 1); l++) if (ac[l] > ac[l - 1] && ac[l] >= ac[l + 1] && ac[l] > bv) { bv = ac[l]; best = l; }
+    return best < 0 ? null : { lag: best, v: bv };
+  };
+  const s1 = peakIn(Math.round(0.35 * fs), Math.round(0.85 * fs));
+  if (!s1) return { error: 'nogait' };
+  const s2 = peakIn(Math.round(1.7 * s1.lag), Math.round(2.3 * s1.lag));
+  if (!s2) return { error: 'nogait' };
+  if (s2.v < 0.15) return { error: 'nogait' };
+  const a = ac[s2.lag - 1], b = ac[s2.lag], c = ac[s2.lag + 1], den = a - 2 * b + c;
+  const strideSec = (s2.lag + (den !== 0 ? 0.5 * (a - c) / den : 0)) / fs;
+  // step-time variability from detected step peaks
+  const w = Math.max(1, Math.round(0.08 * fs)), sm = new Float64Array(N);
+  for (let i = 0; i < N; i++) { let s = 0, n = 0; for (let j = Math.max(0, i - w); j <= Math.min(N - 1, i + w); j++) { s += x[j]; n++; } sm[i] = s / n; }
+  const thr = 0.35 * sdp(Array.from(sm)), minD = Math.round(0.3 * fs), peaks = [];
+  for (let i = 1; i < N - 1; i++) {
+    if (sm[i] > thr && sm[i] >= sm[i - 1] && sm[i] > sm[i + 1]) {
+      if (peaks.length && i - peaks[peaks.length - 1] < minD) { if (sm[i] > sm[peaks[peaks.length - 1]]) peaks[peaks.length - 1] = i; }
+      else peaks.push(i);
+    }
+  }
+  const ivs = []; for (let i = 1; i < peaks.length; i++) ivs.push((peaks[i] - peaks[i - 1]) / fs);
+  if (ivs.length < 12) return { error: 'nogait' };
+  const med = median(ivs), kept = ivs.filter(v => v < 1.6 * med && v > 0.55 * med);
+  return { cadence: 120 / strideSec, strideReg: s2.v, stepReg: s1.v, symmetry: s1.v / s2.v, stepCV: sdp(kept) / mean(kept), steps: peaks.length, dur };
+}
+
+/* ---------- personal-baseline drift engine ---------- */
+const DOMAINS = {
+  voice:  { label: 'Voice',                        feats: [ { k: 'pitchInstab', label: 'Pitch variation', unit: '%', worse: 'up', floor: 0.35 },
+                                                             { k: 'loudCV', label: 'Loudness variation', unit: '%', worse: 'up', floor: 3 } ] },
+  spiral: { label: 'Spiral drawing',               feats: [ { k: 'irreg', label: 'Shape irregularity', unit: '% radius', worse: 'up', floor: 0.4 },
+                                                             { k: 'tremorPct', label: 'Tremor-band amplitude', unit: '% canvas', worse: 'up', floor: 0.04 } ] },
+  tap:    { label: 'Finger tapping',               feats: [ { k: 'rate', label: 'Tapping rate', unit: '/s', worse: 'down', floor: 0.25 },
+                                                             { k: 'cv', label: 'Rhythm variability', unit: '', worse: 'up', floor: 0.03 },
+                                                             { k: 'decr', label: 'Slowing over test', unit: '%', worse: 'up', floor: 4 } ] },
+  tremor: { label: 'Hand tremor (motion sensor)',  feats: [ { k: 'tremorAmp', label: 'Tremor-band amplitude', unit: 'mg', worse: 'up', floor: 1.5 },
+                                                             { k: 'tremorRatio', label: 'Tremor-band share', unit: '', worse: 'up', floor: 0.05 } ], extra: ['tremorHz'] },
+  gait:   { label: 'Walking (motion sensor)',      feats: [ { k: 'cadence', label: 'Cadence', unit: 'steps/min', worse: 'down', floor: 3 },
+                                                             { k: 'strideReg', label: 'Stride regularity', unit: '', worse: 'down', floor: 0.04 },
+                                                             { k: 'stepCV', label: 'Step-time variability', unit: '', worse: 'up', floor: 0.02 } ], extra: ['stepReg', 'symmetry'] },
+  quiz:   { label: 'Symptom questions',            feats: [ { k: 'points', label: 'Symptom points', unit: '/ 14', worse: 'up', floor: 0.8 } ] }
+};
+const K_SLACK = 0.5, H_LIMIT = 4, Z_CLAMP = 5, BASE_LIVE = 3, BASE_SIM = 4, SAFETY_POINTS = 8;
+const fv = (s, dom, k) => { const d = s.features && s.features[dom]; return d && typeof d[k] === 'number' && isFinite(d[k]) ? d[k] : null; };
+
+function analyseSessions(sessions, baseN) {
+  const n = sessions.length;
+  const res = { n, baseN, phase: n < baseN ? 'building' : n === baseN ? 'ready' : 'monitoring', domains: {}, flagged: [], firstReviewAt: -1, safetyNet: false, status: '' };
+  for (const dom of Object.keys(DOMAINS)) {
+    const feats = DOMAINS[dom].feats, stats = {};
+    for (const f of feats) {
+      const vals = sessions.slice(0, baseN).map(s => fv(s, dom, f.k)).filter(v => v != null);
+      if (n >= baseN && vals.length >= 2) stats[f.k] = { mu: mean(vals), sd: Math.max(sds(vals), f.floor) };
+    }
+    const z = [], S = [];
+    let cs = 0, alarmAt = -1;
+    sessions.forEach((s, i) => {
+      const zs = [];
+      feats.forEach(f => {
+        const st = stats[f.k], v = fv(s, dom, f.k);
+        if (st && v != null) { let zz = (v - st.mu) / st.sd; if (f.worse === 'down') zz = -zz; zs.push(clamp(zz, -Z_CLAMP, Z_CLAMP)); }
+      });
+      const zd = zs.length ? mean(zs) : null;
+      z.push(zd);
+      if (i >= baseN) {
+        if (zd != null) { cs = Math.max(0, cs + zd - K_SLACK); if (cs >= H_LIMIT && alarmAt < 0) alarmAt = i; }
+        S.push(cs);
+      } else S.push(null);
+    });
+    const last = n - 1, lastS = res.phase === 'monitoring' ? S[last] : null;
+    const rows = feats.map(f => {
+      const st = stats[f.k], v = last >= 0 ? fv(sessions[last], dom, f.k) : null;
+      let zl = null; if (st && v != null) { zl = (v - st.mu) / st.sd; if (f.worse === 'down') zl = -zl; }
+      return { k: f.k, label: f.label, unit: f.unit, mu: st ? st.mu : null, sd: st ? st.sd : null, latest: v, z: zl };
+    });
+    res.domains[dom] = { z, S, alarmAt, latestZ: z[last] != null ? z[last] : null, latestS: lastS, flagged: lastS != null && lastS >= H_LIMIT, rows };
+  }
+  if (res.phase === 'monitoring') {
+    for (let i = baseN; i < n; i++) {
+      const c = Object.keys(DOMAINS).filter(d => res.domains[d].S[i] != null && res.domains[d].S[i] >= H_LIMIT).length;
+      if (c >= 2) { res.firstReviewAt = i; break; }
+    }
+    res.flagged = Object.keys(DOMAINS).filter(d => res.domains[d].flagged);
+    res.status = res.flagged.length >= 2 ? 'review' : res.flagged.length === 1 ? 'watch' : 'stable';
+  } else res.status = res.phase;
+  if (n) { const q = fv(sessions[n - 1], 'quiz', 'points'); res.safetyNet = q != null && q >= SAFETY_POINTS; }
+  return res;
+}
+
+/* ---------- simulators (synthetic; clearly labelled in the UI) ---------- */
+const BASE_PROFILE = {
+  voice:  { pitchInstab: [1.0, 0.3], loudCV: [12, 2.5] },
+  spiral: { irreg: [1.2, 0.3], tremorPct: [0.08, 0.02] },
+  tap:    { rate: [4.2, 0.2], cv: [0.12, 0.02], decr: [4, 3] },
+  tremor: { tremorAmp: [4, 1.2], tremorRatio: [0.25, 0.04] },
+  gait:   { cadence: [108, 2.5], strideReg: [0.85, 0.03], stepCV: [0.04, 0.01] },
+  quiz:   { points: [2, 0.8] }
+};
+const DRIFT_END = {
+  voice:  { pitchInstab: 1.2, loudCV: 8 },
+  spiral: { irreg: 1.4, tremorPct: 0.12 },
+  tap:    { rate: -0.9, cv: 0.07, decr: 11 },
+  tremor: { tremorAmp: 8, tremorRatio: 0.15 },
+  gait:   { cadence: -8, strideReg: -0.10, stepCV: 0.03 },
+  quiz:   { points: 5 }
+};
+const BOUNDS = { pitchInstab: [0.1, 30], loudCV: [2, 80], irreg: [0.2, 30], tremorPct: [0.01, 5], rate: [1, 9], cv: [0.02, 1], decr: [-15, 70],
+                 tremorAmp: [0.5, 400], tremorRatio: [0.02, 0.95], cadence: [60, 160], strideReg: [0.05, 0.98], stepCV: [0.005, 0.5], points: [0, 14] };
+function sampleFeatures(rng, ramp) {             // one synthetic session; ramp 0..1 scales the drift
+  const f = {};
+  for (const dom of Object.keys(BASE_PROFILE)) {
+    f[dom] = {};
+    for (const k of Object.keys(BASE_PROFILE[dom])) {
+      const [m, s] = BASE_PROFILE[dom][k];
+      let v = m + s * gaussR(rng) + ((DRIFT_END[dom] || {})[k] || 0) * ramp;
+      const b = BOUNDS[k]; if (b) v = clamp(v, b[0], b[1]);
+      if (k === 'points') v = Math.round(v);
+      f[dom][k] = v;
+    }
+  }
+  return f;
+}
+function makePersona(kind, weeks, seed) {
+  const rng = mulberry32(seed), out = [];
+  for (let w = 1; w <= weeks; w++) out.push({ id: 'w' + w, label: 'W' + w, time: null, sim: true, features: sampleFeatures(rng, kind === 'drift' ? clamp01((w - 5) / 6) : 0) });
+  return out;
+}
+function simTremorSamples(ampMg, hz, rng) {      // 20 s at ~60 Hz, gravity included, with a little physiological tremor and noise
+  const A = ampMg * 9.80665 / 1000, ph = rng() * 6.28, ph2 = rng() * 6.28, out = [];
+  for (let i = 0; i < 20 * 60; i++) {
+    const t = i / 60, s = A * Math.sin(2 * Math.PI * hz * t + ph), phys = 0.0015 * 9.80665 * Math.sin(2 * Math.PI * 10 * t + ph2);
+    out.push({ t: 1000 * t + 2 * rng(), x: 0.35 * s + 0.4 * phys + 0.012 * gaussR(rng), y: 0.9 + 0.25 * s + 0.3 * phys + 0.012 * gaussR(rng), z: 9.6 + s + phys + 0.012 * gaussR(rng) });
+  }
+  return out;
+}
+function simGaitSamples(cadence, cv, noise, rng) {   // 30 s at ~60 Hz
+  const stepT = 60 / cadence, times = [];
+  let tt = 0.3; while (tt < 32) { times.push(tt); tt += stepT * (1 + cv * gaussR(rng)); }
+  const out = [];
+  for (let i = 0; i < 30 * 60; i++) {
+    const t = i / 60; let a = 0;
+    for (let j = 0; j < times.length; j++) { const d = t - times[j]; if (Math.abs(d) < 0.25) a += (j % 2 === 0 ? 3.2 : 2.7) * Math.exp(-(d * d) / (2 * 0.045 * 0.045)); }
+    a += 0.6 * Math.sin(Math.PI * t / stepT) + noise * gaussR(rng);
+    out.push({ t: 1000 * t + 2 * rng(), x: 0.5 * a, y: 0.3 * a, z: 9.6 + a });
+  }
+  return out;
+}
+/* ANALYSIS-END */
+
+/* ================================================================
+   IoT LAYER: an in-page publish/subscribe broker with MQTT-style topics.
+   It stands in for an MQTT broker plus cloud store. Only compact feature
+   vectors are published; raw audio, touch and motion data stay on the device.
+   ================================================================ */
+const Bus = (() => {
+  const subs = [], log = [];
+  const match = (pat, topic) => {
+    const p = pat.split('/'), t = topic.split('/');
+    for (let i = 0; i < p.length; i++) { if (p[i] === '#') return true; if (i >= t.length) return false; if (p[i] !== '+' && p[i] !== t[i]) return false; }
+    return p.length === t.length;
+  };
+  return {
+    log, match,
+    subscribe(pat, fn) { subs.push({ pat, fn }); },
+    publish(topic, payload, meta) {
+      meta = meta || {};
+      const msg = { topic, payload, bytes: JSON.stringify(payload).length, rawBytes: meta.rawBytes || 0, t: Date.now(), sim: !!meta.sim };
+      log.push(msg); if (log.length > 300) log.shift();
+      subs.forEach(s => { if (match(s.pat, topic)) s.fn(msg); });
+      return msg;
+    },
+    stats() { return { n: log.length, sent: log.reduce((s, m) => s + m.bytes, 0), raw: log.reduce((s, m) => s + m.rawBytes, 0) }; }
+  };
+})();
+const Cloud = { sessions: [], pending: {} };
+Bus.subscribe('dw/+/+/#', msg => {
+  const parts = msg.topic.split('/'), sid = parts[2], dom = parts[3];
+  if (dom === 'summary') {
+    Cloud.sessions.push({ id: sid, label: 'S' + (Cloud.sessions.length + 1), time: msg.payload.time, sim: !!msg.payload.sim, features: Cloud.pending[sid] || {} });
+    delete Cloud.pending[sid];
+  } else { (Cloud.pending[sid] = Cloud.pending[sid] || {})[dom] = msg.payload; }
+});
+
+/* ================================================================
+   APP STATE AND HELPERS
+   ================================================================ */
+const S = {
+  screen: 'welcome', consent: false, demo: false,
+  cur: { voice: null, spiral: null, tap: null, tremor: null, gait: null, quiz: null },
+  answers: Array(7).fill(null), qIndex: 0, source: 'live', sid: 0, cleanup: null, lastSent: null
+};
+const SIM = { stable: makePersona('stable', 12, 7), drift: makePersona('drift', 12, 11) };
+const demoRng = mulberry32(2026);
+const app = document.getElementById('app');
+const $ = (sel, el) => (el || document).querySelector(sel);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+const f2 = v => (Math.round(v * 100) / 100).toFixed(2);
+const kb = b => b >= 1024 ? (b / 1024).toFixed(b >= 10240 ? 0 : 1) + ' KB' : b + ' bytes';
+const VIEWS = {};
+
+function go(name) {
+  if (S.cleanup) { S.cleanup(); S.cleanup = null; }
+  S.screen = name; render(); window.scrollTo(0, 0);
+}
+function shell(inner) {
+  const clinic = S.screen === 'clinic';
+  return `<div class="wrap">
+    <header class="top"><div class="brand">DriftWatch<small>Personal-baseline early screening. Prototype.</small></div></header>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="patient" aria-selected="${!clinic}">Patient</button>
+      <button type="button" role="tab" data-tab="clinic" aria-selected="${clinic}">Clinician</button>
+    </div>
+    <main id="main">${inner}</main>
+    <footer class="foot">Screening aid only. Not a diagnosis.</footer>
+  </div>`;
+}
+function render() {
+  const v = VIEWS[S.screen];
+  app.innerHTML = shell(v.html());
+  app.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => go(b.dataset.tab === 'clinic' ? 'clinic' : (S.consent ? 'home' : 'welcome'))));
+  app.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go('home')));
+  v.mount();
+}
+const backBtn = () => `<button class="btn text" data-back type="button">Back to checks</button>`;
+const simBtn = () => S.demo ? `<button class="btn text" id="sampleBtn" type="button">Use simulated data</button>` : '';
+const kv = rows => `<dl class="kv">${rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl>`;
+function doneBox(html, label) {
+  return `<div class="done" role="status">${html}</div><div class="actions"><button class="btn primary" id="nextBtn" type="button">${label || 'Save and return'}</button></div>`;
+}
+function spiralPath(cx, cy, turns, rMax, steps) {
+  let d = '';
+  for (let i = 0; i <= steps; i++) { const th = i / steps * turns * 2 * Math.PI, r = 4 + (rMax - 4) * i / steps; d += (i ? 'L' : 'M') + (cx + r * Math.cos(th)).toFixed(1) + ' ' + (cy + r * Math.sin(th)).toFixed(1); }
+  return d;
+}
+function ensureMotion() {
+  if (typeof DeviceMotionEvent === 'undefined') return Promise.resolve(false);
+  if (typeof DeviceMotionEvent.requestPermission === 'function') return DeviceMotionEvent.requestPermission().then(r => r === 'granted').catch(() => false);
+  return Promise.resolve(true);
+}
+function submitFeatures(cur, opts) {
+  opts = opts || {};
+  const sid = 's' + (++S.sid), msgs = [];
+  for (const dom of Object.keys(DOMAINS)) {
+    const c = cur[dom]; if (!c) continue;
+    const payload = {};
+    DOMAINS[dom].feats.concat((DOMAINS[dom].extra || []).map(k => ({ k }))).forEach(f => { if (typeof c[f.k] === 'number') payload[f.k] = +c[f.k].toFixed(3); });
+    msgs.push(Bus.publish('dw/demo-user/' + sid + '/' + dom, payload, { rawBytes: c.rawBytes || 0, sim: !!c.sim }));
+  }
+  const anySim = !!opts.sim || Object.keys(cur).some(k => cur[k] && cur[k].sim);
+  msgs.push(Bus.publish('dw/demo-user/' + sid + '/summary', { time: new Date().toISOString(), sim: anySim, tests: msgs.length }, {}));
+  return { sid, msgs, sent: msgs.reduce((s, m) => s + m.bytes, 0), raw: msgs.reduce((s, m) => s + m.rawBytes, 0) };
+}
+function simSession(drifted) {                   // adds a synthetic session through the same IoT path
+  const ramp = drifted ? 0.75 + 0.35 * demoRng() : 0, f = sampleFeatures(demoRng, ramp), cur = {};
+  const rawEst = { voice: 882000, spiral: 21600, tap: 520, tremor: 38400, gait: 57600, quiz: 14 };
+  for (const dom of Object.keys(f)) cur[dom] = Object.assign({}, f[dom], { rawBytes: rawEst[dom], sim: true });
+  return submitFeatures(cur, { sim: true });
+}
+const currentDone = () => Object.keys(S.cur).filter(k => S.cur[k]).length;
+
+/* ================================================================
+   PATIENT: welcome and home
+   ================================================================ */
+VIEWS.welcome = {
+  html() {
+    return `<section>
+      <div class="hero">
+        <svg viewBox="0 0 96 96" aria-hidden="true"><path class="ghost" d="${spiralPath(48, 48, 3, 44, 260)}"/><path class="draw" pathLength="1" d="${spiralPath(48, 48, 3, 44, 260)}"/></svg>
+        <div><h1>Track small changes before they become symptoms</h1></div>
+      </div>
+      <p class="lead">Six short checks use your phone’s microphone, touch screen and motion sensor. Instead of judging you against other people, DriftWatch compares you with your own baseline over time.</p>
+      ${!window.isSecureContext ? '<div class="banner watch">This page is open as a local file, so the microphone and motion sensor are blocked here. Host it online and open its https link for the real tests, or turn on Demo helpers below to try the app now.</div>' : ''}
+      <div class="panel"><p>This is a screening aid, not a diagnosis. Results are for guidance only. Please see a doctor about any health concern.</p>
+        <p>Raw voice, drawing and motion data stay on this device. Only small summary numbers are sent to the clinician dashboard, and in this prototype that dashboard runs inside this page.</p></div>
+      <label class="check"><input type="checkbox" id="consent" ${S.consent ? 'checked' : ''}><span>I understand and want to continue.</span></label>
+      <div class="actions"><button class="btn primary" id="startBtn" type="button" ${S.consent ? '' : 'disabled'}>Start</button></div>
+      <details class="presenter"><summary>Presenter options</summary>
+        <label class="check"><input type="checkbox" id="demoChk" ${S.demo ? 'checked' : ''}><span>Demo helpers: show “Use simulated data” buttons and simulated-session buttons, so you can present without sensors.</span></label>
+      </details>
+    </section>`;
+  },
+  mount() {
+    const c = $('#consent'), b = $('#startBtn'), d = $('#demoChk');
+    c.addEventListener('change', () => { S.consent = c.checked; b.disabled = !c.checked; });
+    d.addEventListener('change', () => { S.demo = d.checked; });
+    b.addEventListener('click', () => go('home'));
+  }
+};
+
+const TESTS = [
+  { k: 'voice', name: 'Voice', hint: 'Say “aaah” for 10 s' },
+  { k: 'spiral', name: 'Spiral', hint: 'Trace a spiral' },
+  { k: 'tap', name: 'Tapping', hint: 'Alternate taps, 15 s' },
+  { k: 'tremor', name: 'Hand tremor', hint: 'Hold the phone still, 20 s' },
+  { k: 'gait', name: 'Walking', hint: 'Walk with the phone, 30 s' },
+  { k: 'quiz', name: 'Questions', hint: '7 quick questions' }
+];
+VIEWS.home = {
+  html() {
+    const n = Cloud.sessions.length, done = currentDone();
+    const base = n < BASE_LIVE ? `Building your baseline: ${n} of ${BASE_LIVE} sessions saved. Repeat the checks on different days.` : n === BASE_LIVE ? 'Your baseline is complete. Your next session will be compared with it.' : `${n} sessions saved. Each new session is compared with your baseline.`;
+    return `<section>
+      <h2>Today’s checks</h2>
+      <p class="lead">${base}</p>
+      <div class="tiles">${TESTS.map(t => `<button class="tile ${S.cur[t.k] ? 'done' : ''}" type="button" data-go="${t.k}"><b>${t.name}</b><span>${t.hint}</span><span class="st">${S.cur[t.k] ? 'Done' : 'To do'}</span></button>`).join('')}</div>
+      <div class="actions"><button class="btn primary" id="submitBtn" type="button" ${done ? '' : 'disabled'}>Save session (${done} of 6 checks)</button></div>
+      <p class="fine">You can skip a check. Motion checks need a phone that supports motion sensors.</p>
+    </section>`;
+  },
+  mount() {
+    app.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+    $('#submitBtn').addEventListener('click', () => {
+      S.lastSent = submitFeatures(S.cur);
+      S.cur = { voice: null, spiral: null, tap: null, tremor: null, gait: null, quiz: null };
+      S.answers = Array(7).fill(null); S.qIndex = 0;
+      go('sent');
+    });
+  }
+};
+
+/* ================================================================
+   PATIENT: voice
+   ================================================================ */
+VIEWS.voice = {
+  html() {
+    return `<section>${backBtn()}<h2>Voice test</h2>
+      <p class="lead">Take a deep breath, then say “aaah” steadily for 10 seconds, as loudly as feels comfortable.</p>
+      <div class="scope"><canvas id="wave" aria-hidden="true"></canvas><div class="status" id="vstatus" aria-live="polite"></div></div>
+      <div class="timer"><div class="bar"><i id="vbar"></i></div><div class="secs"><span id="vsec">10</span> <small>seconds</small></div></div>
+      <div id="vzone"><div class="actions"><button class="btn primary" id="vgo" type="button">Start recording</button>${simBtn()}</div></div>
+      <p class="msg" id="vmsg" role="alert"></p></section>`;
+  },
+  mount() {
+    const cv = $('#wave'), dpr = window.devicePixelRatio || 1, cw = cv.clientWidth || 480, ch = 150;
+    cv.width = cw * dpr; cv.height = ch * dpr;
+    const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    const flat = () => { g.clearRect(0, 0, cw, ch); g.strokeStyle = '#4C6A8A'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, ch / 2); g.lineTo(cw, ch / 2); g.stroke(); };
+    flat();
+    const finishWith = (m, raw, sim) => {
+      S.cur.voice = Object.assign({}, m, { rawBytes: raw, sim });
+      $('#vzone').innerHTML = doneBox(`<strong>Voice recorded: ${f1(m.voicedSec)} s analysed.</strong>` + kv([['Pitch variation', f1(m.pitchInstab) + ' %'], ['Loudness variation', f1(m.loudCV) + ' %']]) + `<p class="fine">${sim ? 'Simulated values. ' : ''}Compared with your own baseline once you have ${BASE_LIVE} saved sessions.</p>`);
+      $('#nextBtn').addEventListener('click', () => go('home'));
+    };
+    const sb = $('#sampleBtn');
+    if (sb) sb.addEventListener('click', () => { const f = sampleFeatures(demoRng, 0).voice; finishWith({ pitchInstab: f.pitchInstab, loudCV: f.loudCV, f0Mean: 118, voicedSec: 8.4 }, 882000, true); });
+    $('#vgo').addEventListener('click', async () => {
+      const goBtn = $('#vgo'), msg = $('#vmsg'); msg.textContent = ''; goBtn.disabled = true;
+      if (!window.isSecureContext) { msg('This page is open as a local file, so the microphone is blocked here. Host the file online and open its https link, or use simulated data.'); goBtn.disabled = false; return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+      catch (e) { msg.textContent = 'The microphone is not available. Allow microphone access in your browser (the page must be opened over https), then try again.'; goBtn.disabled = false; return; }
+      const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+      try { if (ctx.state === 'suspended') await ctx.resume(); } catch (e) { /* ignore */ }
+      const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
+      an.fftSize = 2048; src.connect(an);
+      const buf = new Float32Array(an.fftSize), frames = [], DUR = 10000, t0 = performance.now();
+      let stopped = false, timer = null;
+      const stop = () => { if (stopped) return; stopped = true; clearInterval(timer); stream.getTracks().forEach(tr => tr.stop()); ctx.close().catch(() => {}); };
+      S.cleanup = stop;
+      $('#vstatus').textContent = 'Listening. Keep saying “aaah”.';
+      timer = setInterval(() => {
+        an.getFloatTimeDomainData(buf);
+        const r = detectPitch(buf, ctx.sampleRate);
+        frames.push({ rms: r.rms, f0: r.f0 });
+        g.clearRect(0, 0, cw, ch); g.strokeStyle = r.f0 ? '#5FE0D4' : '#8FB3D9'; g.lineWidth = 2; g.beginPath();
+        const step = buf.length / cw;
+        for (let x = 0; x < cw; x++) { const v = buf[Math.floor(x * step)] * 3, y = ch / 2 - clamp(v, -1, 1) * (ch / 2 - 6); if (x) g.lineTo(x, y); else g.moveTo(x, y); }
+        g.stroke();
+        const el = performance.now() - t0;
+        $('#vbar').style.width = Math.min(100, el / DUR * 100) + '%';
+        $('#vsec').textContent = Math.max(0, Math.ceil((DUR - el) / 1000));
+        if (el >= DUR) {
+          const sr = ctx.sampleRate; stop(); S.cleanup = null;
+          const m = analyzeVoice(frames, DUR / 1000 / frames.length);
+          $('#vstatus').textContent = '';
+          if (m.error) { msg.textContent = 'We could not hear enough steady voice. Move closer to the microphone and try again.'; goBtn.disabled = false; goBtn.textContent = 'Try again'; flat(); $('#vbar').style.width = '0'; $('#vsec').textContent = '10'; return; }
+          finishWith(m, sr * 2 * 10, false);
+        }
+      }, 40);
+    });
+  }
+};
+
+/* ================================================================
+   PATIENT: spiral
+   ================================================================ */
+VIEWS.spiral = {
+  html() {
+    return `<section>${backBtn()}<h2>Spiral drawing</h2>
+      <p class="lead">Trace the dotted spiral with your finger, from the centre outwards, at a comfortable speed. Lift your finger at the end.</p>
+      <div class="spiralbox"><canvas id="spiral" aria-label="Spiral drawing area"></canvas></div>
+      <div id="szone"><div class="actions"><button class="btn primary" id="sdone" type="button">Done</button><button class="btn" id="sclear" type="button">Clear and redraw</button>${simBtn()}</div></div>
+      <p class="msg" id="smsg" role="alert"></p></section>`;
+  },
+  mount() {
+    const cv = $('#spiral'), dpr = window.devicePixelRatio || 1;
+    const size = Math.floor(Math.min(cv.parentElement.clientWidth - 16, 440)) || 320;
+    cv.style.width = cv.style.height = size + 'px'; cv.width = cv.height = size * dpr;
+    const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    const guide = () => {
+      g.clearRect(0, 0, size, size); g.fillStyle = '#B8C7D6';
+      const rMax = size * 0.46, steps = 420;
+      for (let i = 0; i <= steps; i++) { const th = i / steps * 3 * 2 * Math.PI, r = rMax * i / steps; g.beginPath(); g.arc(size / 2 + r * Math.cos(th), size / 2 + r * Math.sin(th), 2.4, 0, 2 * Math.PI); g.fill(); }
+      g.fillStyle = '#0A7A75'; g.beginPath(); g.arc(size / 2, size / 2, 6, 0, 2 * Math.PI); g.fill();
+    };
+    guide();
+    let pts = [], drawing = false, last = null;
+    const add = e => {
+      const rc = cv.getBoundingClientRect(), p = { x: e.clientX - rc.left, y: e.clientY - rc.top, t: e.timeStamp };
+      if (pts.length && p.t <= pts[pts.length - 1].t) return;
+      pts.push(p);
+      g.strokeStyle = '#0B2545'; g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); if (last) g.moveTo(last.x, last.y); else g.moveTo(p.x, p.y); g.lineTo(p.x, p.y); g.stroke();
+      last = p;
+    };
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } drawing = true; pts = []; last = null; guide(); $('#smsg').textContent = ''; add(e); });
+    cv.addEventListener('pointermove', e => { if (!drawing) return; e.preventDefault(); const list = e.getCoalescedEvents ? e.getCoalescedEvents() : []; (list.length ? list : [e]).forEach(add); });
+    const end = () => { drawing = false; };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    const finishWith = (m, raw, sim) => {
+      S.cur.spiral = Object.assign({}, m, { rawBytes: raw, sim });
+      $('#szone').innerHTML = doneBox(`<strong>Drawing recorded: ${f1(m.turns)} turns in ${f1(m.dur)} s.</strong>` + kv([['Shape irregularity', f1(m.irreg) + ' % of radius'], ['Tremor-band amplitude', f2(m.tremorPct) + ' % of canvas']]) + (sim ? '<p class="fine">Simulated values.</p>' : ''));
+      $('#nextBtn').addEventListener('click', () => go('home'));
+    };
+    $('#sclear').addEventListener('click', () => { pts = []; last = null; guide(); $('#smsg').textContent = ''; });
+    $('#sdone').addEventListener('click', () => {
+      const m = analyzeSpiral(pts, size);
+      if (m.error) { $('#smsg').textContent = 'Please trace at least one full turn, taking at least three seconds.'; return; }
+      finishWith(m, pts.length * 24, false);
+    });
+    const sb = $('#sampleBtn');
+    if (sb) sb.addEventListener('click', () => { const f = sampleFeatures(demoRng, 0).spiral; finishWith({ irreg: f.irreg, tremorPct: f.tremorPct, tremorHz: 5.2, turns: 3.0, dur: 14.2 }, 21600, true); });
+  }
+};
+
+/* ================================================================
+   PATIENT: tapping
+   ================================================================ */
+VIEWS.tap = {
+  html() {
+    return `<section>${backBtn()}<h2>Finger tapping</h2>
+      <p class="lead">Tap the two circles one after the other, as fast and as evenly as you can, for 15 seconds. Begin with the left circle.</p>
+      <div class="timer"><div class="bar"><i id="tbar"></i></div><div class="secs"><span id="tsec">15</span> <small>seconds</small></div></div>
+      <div class="taps"><button class="tapbtn next" id="tapL" type="button" aria-label="Left circle"></button><button class="tapbtn" id="tapR" type="button" aria-label="Right circle"></button></div>
+      <p class="hint" id="thint">Tap the left circle to begin</p>
+      <div id="tzone">${S.demo ? `<div class="actions">${simBtn()}</div>` : ''}</div>
+      <p class="msg" id="tmsg" role="alert"></p></section>`;
+  },
+  mount() {
+    const L = $('#tapL'), R = $('#tapR'), DUR = 15000;
+    let expected = 'L', times = [], errors = 0, t0 = 0, timer = null, running = false, over = false;
+    const paint = () => { L.classList.toggle('next', expected === 'L'); R.classList.toggle('next', expected === 'R'); };
+    const finishWith = (m, raw, sim) => {
+      S.cur.tap = Object.assign({}, m, { rawBytes: raw, sim }); L.disabled = R.disabled = true;
+      $('#tzone').innerHTML = doneBox(`<strong>Tapping recorded: ${m.n} taps.</strong>` + kv([['Rate', f1(m.rate) + ' taps/s'], ['Rhythm variability', f2(m.cv)], ['Slowing over the test', Math.round(m.decr) + ' %']]) + (sim ? '<p class="fine">Simulated values.</p>' : ''));
+      $('#nextBtn').addEventListener('click', () => go('home'));
+    };
+    const stop = () => { if (timer) clearInterval(timer); timer = null; running = false; };
+    S.cleanup = stop;
+    const useSample = () => { stop(); over = true; const f = sampleFeatures(demoRng, 0).tap; finishWith({ rate: f.rate, cv: f.cv, decr: f.decr, pauses: 0, n: Math.round(f.rate * 15), errors: 1, span: 14.9 }, 520, true); };
+    const finish = () => {
+      stop(); over = true;
+      const m = analyzeTap(times, errors);
+      if (m.error) {
+        $('#tmsg').textContent = 'Not enough taps were recorded. Please try again.';
+        $('#tzone').innerHTML = `<div class="actions"><button class="btn primary" id="tretry" type="button">Try again</button>${simBtn()}</div>`;
+        $('#tretry').addEventListener('click', () => render());
+        const s2 = $('#sampleBtn'); if (s2) s2.addEventListener('click', useSample);
+        return;
+      }
+      finishWith(m, times.length * 8, false);
+    };
+    const tap = which => {
+      if (over) return;
+      const now = performance.now();
+      if (!running) {
+        if (which !== 'L') return;
+        running = true; t0 = now; $('#thint').textContent = '';
+        timer = setInterval(() => {
+          const el = performance.now() - t0;
+          $('#tbar').style.width = Math.min(100, el / DUR * 100) + '%';
+          $('#tsec').textContent = Math.max(0, Math.ceil((DUR - el) / 1000));
+          if (el >= DUR) finish();
+        }, 100);
+      }
+      if (which === expected) { times.push(now); expected = expected === 'L' ? 'R' : 'L'; paint(); } else errors++;
+    };
+    L.addEventListener('pointerdown', e => { e.preventDefault(); tap('L'); });
+    R.addEventListener('pointerdown', e => { e.preventDefault(); tap('R'); });
+    const sb = $('#sampleBtn'); if (sb) sb.addEventListener('click', useSample);
+  }
+};
+
+/* ================================================================
+   PATIENT: motion-sensor tests (hand tremor and walking)
+   ================================================================ */
+function sensorHTML(title, lead, secs, note) {
+  return `<section>${backBtn()}<h2>${title}</h2><p class="lead">${lead}</p>
+    <div class="scope"><canvas id="ksig" aria-hidden="true"></canvas><div class="status" id="kstatus" aria-live="polite"></div></div>
+    <div class="timer"><div class="bar"><i id="kbar"></i></div><div class="secs"><span id="ksec">${secs}</span> <small>seconds</small></div></div>
+    <div id="kzone"><div class="actions"><button class="btn primary" id="kgo" type="button">Start</button>${simBtn()}</div></div>
+    <p class="msg" id="kmsg" role="alert"></p><p class="fine">${note}</p></section>`;
+}
+function mountSensor(cfg) {
+  const cv = $('#ksig'), dpr = window.devicePixelRatio || 1, cw = cv.clientWidth || 480, ch = 150;
+  cv.width = cw * dpr; cv.height = ch * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const flat = () => { g.clearRect(0, 0, cw, ch); g.strokeStyle = '#4C6A8A'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, ch / 2); g.lineTo(cw, ch / 2); g.stroke(); };
+  flat();
+  const msg = t => { $('#kmsg').textContent = t; };
+  const finishWith = (m, count, sim) => {
+    S.cur[cfg.key] = Object.assign({}, m, { rawBytes: count * 32, sim });
+    $('#kzone').innerHTML = doneBox(`<strong>${cfg.doneText(m)}</strong>` + kv(cfg.doneRows(m)) + `<p class="fine">${sim ? 'Simulated signal, analysed by the same code as a real recording. ' : ''}Compared with your own baseline once you have ${BASE_LIVE} saved sessions.</p>`);
+    $('#nextBtn').addEventListener('click', () => go('home'));
+  };
+  const sb = $('#sampleBtn');
+  if (sb) sb.addEventListener('click', () => {
+    const smp = cfg.simulate(), m = cfg.analyze(smp);
+    if (m.error) { msg('The simulated signal could not be analysed. Please try again.'); return; }
+    finishWith(m, smp.length, true);
+  });
+  $('#kgo').addEventListener('click', async () => {
+    const btn = $('#kgo'); msg(''); btn.disabled = true;
+    if (!window.isSecureContext) { msg('This page is open as a local file, so the motion sensor is blocked here. Host the file online and open its https link, or use simulated data.'); btn.disabled = false; return; }
+    const ok = await ensureMotion();
+    if (!ok) { msg('The motion sensor is unavailable or permission was denied. Open this page on a phone over https, or use simulated data.'); btn.disabled = false; return; }
+    const samples = [], live = [], start = performance.now();
+    let stopped = false, timer = null;
+    const onMotion = e => {
+      const a = (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x != null) ? e.accelerationIncludingGravity : e.acceleration;
+      if (!a || a.x == null) return;
+      const el = (performance.now() - start) / 1000;
+      live.push(Math.hypot(a.x, a.y, a.z)); if (live.length > 240) live.shift();
+      if (el >= cfg.lead && el <= cfg.lead + cfg.dur) samples.push({ t: e.timeStamp, x: a.x, y: a.y, z: a.z });
+    };
+    window.addEventListener('devicemotion', onMotion);
+    const stop = () => { if (stopped) return; stopped = true; clearInterval(timer); window.removeEventListener('devicemotion', onMotion); };
+    S.cleanup = stop;
+    if (navigator.vibrate) navigator.vibrate(120);
+    timer = setInterval(() => {
+      const el = (performance.now() - start) / 1000;
+      g.clearRect(0, 0, cw, ch);
+      if (live.length > 2) {
+        const mu = mean(live), sc = (ch / 2 - 8) / cfg.plotScale;
+        g.strokeStyle = '#5FE0D4'; g.lineWidth = 2; g.beginPath();
+        live.forEach((v, i) => { const x = i / 239 * cw, y = ch / 2 - clamp((v - mu) * sc, -ch / 2 + 6, ch / 2 - 6); if (i) g.lineTo(x, y); else g.moveTo(x, y); });
+        g.stroke();
+      } else flat();
+      if (el < cfg.lead) { $('#kstatus').textContent = cfg.leadText(Math.ceil(cfg.lead - el)); $('#ksec').textContent = cfg.dur; $('#kbar').style.width = '0'; }
+      else { const r = el - cfg.lead; $('#kstatus').textContent = 'Recording…'; $('#kbar').style.width = Math.min(100, r / cfg.dur * 100) + '%'; $('#ksec').textContent = Math.max(0, Math.ceil(cfg.dur - r)); }
+      if (el > 2.5 && live.length === 0) { stop(); S.cleanup = null; msg('No motion data was received. Use a phone (over https), or the simulated data option.'); btn.disabled = false; $('#kstatus').textContent = ''; return; }
+      if (el >= cfg.lead + cfg.dur) {
+        stop(); S.cleanup = null; $('#kstatus').textContent = '';
+        const m = cfg.analyze(samples);
+        if (m.error) { msg(cfg.failText); btn.disabled = false; btn.textContent = 'Try again'; $('#kbar').style.width = '0'; return; }
+        finishWith(m, samples.length, false);
+      }
+    }, 60);
+  });
+}
+VIEWS.tremor = {
+  html() { return sensorHTML('Hand tremor test', 'Sit down and rest your forearm on a table or your lap. Hold the phone flat in your hand, relaxed and still, for 20 seconds.', 20, 'The phone’s motion sensor records tiny shakes. Looks for a steady 4 to 6.5 Hz rhythm, the range often seen in Parkinson’s tremor.'); },
+  mount() {
+    mountSensor({
+      key: 'tremor', lead: 3, dur: 20, plotScale: 1, analyze: analyzeTremor,
+      leadText: s => `Get ready. Starting in ${s} s.`, failText: 'We could not get a steady recording. Rest your arm and try again.',
+      simulate: () => simTremorSamples(Math.max(0.8, BASE_PROFILE.tremor.tremorAmp[0] + BASE_PROFILE.tremor.tremorAmp[1] * gaussR(demoRng)), 5 + 0.3 * gaussR(demoRng), demoRng),
+      doneText: m => `Hand tremor recorded: peak at ${f1(m.tremorHz)} Hz.`,
+      doneRows: m => [['Tremor-band amplitude', f1(m.tremorAmp) + ' mg'], ['Tremor-band share', f2(m.tremorRatio)]]
+    });
+  }
+};
+VIEWS.gait = {
+  html() { return sensorHTML('Walking test', 'Put the phone in your front pocket. After the countdown, walk normally in a straight, safe path for 30 seconds.', 30, 'Please walk somewhere safe and clear. Stop any time you feel unsteady. The phone measures how regular your steps are.'); },
+  mount() {
+    mountSensor({
+      key: 'gait', lead: 6, dur: 30, plotScale: 6, analyze: analyzeGait,
+      leadText: s => `Put the phone in your pocket. Walk in ${s} s.`, failText: 'We could not detect a steady walking pattern. Try again with the phone in a front pocket.',
+      simulate: () => simGaitSamples(BASE_PROFILE.gait.cadence[0] + 2 * gaussR(demoRng), 0.03, 0.25, demoRng),
+      doneText: m => `Walking recorded: ${Math.round(m.steps)} steps detected.`,
+      doneRows: m => [['Cadence', Math.round(m.cadence) + ' steps/min'], ['Stride regularity', f2(m.strideReg)], ['Step-time variability', f2(m.stepCV)]]
+    });
+  }
+};
+
+/* ================================================================
+   PATIENT: questions
+   ================================================================ */
+const QUESTIONS = [
+  'Have you noticed a reduced sense of smell?',
+  'Do you kick, shout or move a lot in your sleep, as if acting out dreams?',
+  'Do you often have constipation?',
+  'Has your handwriting become smaller or more cramped?',
+  'Has anyone said your voice has become softer or flatter?',
+  'Do you notice a tremor or shaking in one hand or leg while resting?',
+  'Do you feel slower or stiffer than before, for example with buttons or walking?'
+];
+VIEWS.quiz = {
+  html() {
+    const i = S.qIndex, a = S.answers[i];
+    return `<section>${backBtn()}<h2>Symptom questions</h2><p class="qcount">Question ${i + 1} of 7</p><p class="qtext" id="qtext">${QUESTIONS[i]}</p>
+      <div class="opts" role="radiogroup" aria-labelledby="qtext">${['No', 'Sometimes', 'Often'].map((t, v) => `<button class="opt" type="button" role="radio" aria-checked="${a === v}" data-v="${v}">${t}</button>`).join('')}</div>
+      <div class="actions">${i > 0 ? '<button class="btn text" id="qback" type="button">Previous question</button>' : ''}${S.demo && i === 0 ? simBtn() : ''}</div></section>`;
+  },
+  mount() {
+    app.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+      S.answers[S.qIndex] = Number(b.dataset.v);
+      if (S.qIndex < 6) { S.qIndex++; render(); }
+      else { S.cur.quiz = { points: S.answers.reduce((s, v) => s + v, 0), rawBytes: 14, sim: false }; go('home'); }
+    }));
+    const back = $('#qback'); if (back) back.addEventListener('click', () => { S.qIndex--; render(); });
+    const sb = $('#sampleBtn'); if (sb) sb.addEventListener('click', () => { S.cur.quiz = { points: Math.round(sampleFeatures(demoRng, 0).quiz.points), rawBytes: 14, sim: true }; go('home'); });
+  }
+};
+
+/* ================================================================
+   PATIENT: after saving a session
+   ================================================================ */
+VIEWS.sent = {
+  html() {
+    const r = S.lastSent || { sent: 0, raw: 0 }, a = analyseSessions(Cloud.sessions, BASE_LIVE), names = a.flagged.map(d => DOMAINS[d].label);
+    let line;
+    if (a.phase === 'building') line = `Building your baseline: ${a.n} of ${BASE_LIVE} sessions saved. Repeat the checks on different days so the baseline is fair.`;
+    else if (a.phase === 'ready') line = 'Your baseline is complete. From your next session, changes will be compared with it.';
+    else if (a.status === 'stable') line = 'No sustained change from your own baseline.';
+    else if (a.status === 'watch') line = `One area (${esc(names[0])}) is drifting from your baseline. Repeat the checks in a week or two.`;
+    else line = `Several areas are drifting together (${esc(names.join(', '))}). Please discuss this with a doctor or neurologist. This is not a diagnosis.`;
+    return `<section><h2>Session saved</h2>
+      <div class="banner ${a.status === 'review' ? 'review' : a.status === 'watch' ? 'watch' : a.status === 'stable' ? 'stable' : 'ready'}">${line}</div>
+      ${a.safetyNet ? '<div class="banner watch">Your symptom answers were high. Consider seeing a doctor even if the other checks look stable.</div>' : ''}
+      <div class="panel"><h3>What was sent</h3><p>${kb(r.sent)} of summary numbers went to the dashboard. About ${kb(r.raw)} of raw audio, touch and motion data stayed on this device.</p></div>
+      <div class="actions"><button class="btn primary" id="toClinic" type="button">Open clinician view</button><button class="btn" id="toHome" type="button">Back to checks</button></div></section>`;
+  },
+  mount() { $('#toClinic').addEventListener('click', () => { S.source = 'live'; go('clinic'); }); $('#toHome').addEventListener('click', () => go('home')); }
+};
+
+/* ================================================================
+   CLINICIAN DASHBOARD
+   ================================================================ */
+function getSessions() { return S.source === 'stable' ? SIM.stable : S.source === 'drift' ? SIM.drift : Cloud.sessions; }
+function sparkline(res, dom, baseN, n) {
+  const W = 300, H = 92, pl = 8, pr = 8, pt = 8, pb = 8, iw = W - pl - pr, ih = H - pt - pb, ymax = 8;
+  const x = i => pl + (n <= 1 ? iw / 2 : i * iw / (n - 1)), y = v => pt + ih * (1 - clamp(v, 0, ymax) / ymax), d = res.domains[dom];
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(DOMAINS[dom].label)} drift over sessions">`;
+  if (baseN > 0 && n > 0) { const bw = n <= 1 ? iw : (Math.min(baseN, n) - 1) * iw / (n - 1) + iw / (2 * Math.max(1, n - 1)); s += `<rect x="${pl}" y="${pt}" width="${Math.min(iw, bw)}" height="${ih}" fill="#EEF3F7"/>`; }
+  s += `<line x1="${pl}" x2="${W - pr}" y1="${y(H_LIMIT)}" y2="${y(H_LIMIT)}" stroke="#B83227" stroke-dasharray="4 4" stroke-width="1.5"/>`;
+  d.z.forEach((v, i) => { if (v != null && i >= baseN) { const h = Math.max(1, ih * clamp(Math.max(v, 0), 0, ymax) / ymax); s += `<rect x="${x(i) - 3}" y="${pt + ih - h}" width="6" height="${h}" fill="#CFDBE6"/>`; } });
+  const pts = d.S.map((v, i) => v == null ? null : x(i).toFixed(1) + ',' + y(v).toFixed(1)).filter(Boolean);
+  if (pts.length) s += `<polyline fill="none" stroke="${d.flagged ? '#B83227' : '#0B2545'}" stroke-width="2.5" points="${pts.join(' ')}"/>`;
+  return s + '</svg>';
+}
+VIEWS.clinic = {
+  html() {
+    const src = S.source, sessions = getSessions(), baseN = src === 'live' ? BASE_LIVE : BASE_SIM, a = analyseSessions(sessions, baseN), n = sessions.length;
+    const names = a.flagged.map(d => DOMAINS[d].label);
+    let banner;
+    if (a.phase === 'building') banner = `<div class="banner building">Baseline building: ${a.n} of ${baseN} sessions.<small>${src === 'live' ? 'Save sessions in the Patient tab (or use the simulated-session buttons below).' : ''}</small></div>`;
+    else if (a.phase === 'ready') banner = `<div class="banner ready">Baseline complete (${baseN} sessions).<small>The next session will be compared with it.</small></div>`;
+    else if (a.status === 'stable') banner = `<div class="banner stable">Stable: no sustained drift from the personal baseline.<small>${n - baseN} sessions monitored.</small></div>`;
+    else if (a.status === 'watch') banner = `<div class="banner watch">Watch: ${esc(names[0])} shows sustained drift.<small>One area only. Repeat checks before drawing conclusions.</small></div>`;
+    else banner = `<div class="banner review">Review advised: ${esc(names.join(', '))} drift together from the personal baseline${a.firstReviewAt >= 0 ? ', first at ' + esc(sessions[a.firstReviewAt].label) : ''}.<small>Suggest neurologist review. This is a screening signal, not a diagnosis.</small></div>`;
+    const cards = Object.keys(DOMAINS).map(dom => {
+      const d = a.domains[dom], have = d.z.some(v => v != null);
+      const tag = a.phase !== 'monitoring' ? '<span class="tag na">Baseline</span>' : d.flagged ? '<span class="tag warn">Drifting</span>' : '<span class="tag ok">Stable</span>';
+      const rows = d.rows.filter(r => r.mu != null).map(r => `<tr><td>${esc(r.label)}</td><td>${f2(r.mu)}</td><td>${r.latest != null ? f2(r.latest) : '-'}</td><td>${r.z != null ? (r.z >= 0 ? '+' : '') + f1(r.z) : '-'}</td></tr>`).join('');
+      return `<div class="dcard ${d.flagged ? 'flag' : ''}"><div class="dhead"><span class="dname">${esc(DOMAINS[dom].label)}</span>${tag}</div>
+        <div class="dnum">${d.latestS != null ? `Drift score ${f1(d.latestS)} of ${H_LIMIT} (flag at ${H_LIMIT})` : have ? 'Waiting for monitored sessions' : 'No data yet'}</div>
+        ${have ? sparkline(a, dom, baseN, n) : ''}
+        ${rows ? `<details><summary>Baseline and latest values</summary><table class="tbl"><tr><th></th><th>Baseline</th><th>Latest</th><th>z</th></tr>${rows}</table></details>` : ''}</div>`;
+    }).join('');
+    const st = Bus.stats(), last = Bus.log.slice(-8).reverse();
+    const iot = `<div class="panel"><h3>IoT data flow</h3>
+      <div class="flow"><span>Phone sensors</span><b>then</b><span>Edge features</span><b>then</b><span>Broker</span><b>then</b><span>This dashboard</span></div>
+      ${st.n ? `<p>${st.n} messages so far. Raw data kept on the device: about ${kb(st.raw)}. Sent to the dashboard: ${kb(st.sent)}.</p>` : '<p>No messages yet. Complete a session in the Patient tab.</p>'}
+      ${last.length ? `<ul class="log">${last.map(m => `<li><span>${esc(m.topic)}</span><span>${m.bytes} B${m.sim ? ' (sim)' : ''}</span></li>`).join('')}</ul>` : ''}
+      <p class="fine">The broker runs inside this page and stands in for MQTT over TLS to a cloud service.</p></div>`;
+    return `<section><h2>Clinician dashboard</h2>
+      <p class="lead">Each area is compared with the person’s own baseline. A flag needs sustained drift, and review is advised only when two areas drift together.</p>
+      <div class="controls"><label for="src">Data source</label><select id="src">
+        <option value="live" ${src === 'live' ? 'selected' : ''}>Live sessions (this device)</option>
+        <option value="stable" ${src === 'stable' ? 'selected' : ''}>Simulated: 12 weeks, stable person</option>
+        <option value="drift" ${src === 'drift' ? 'selected' : ''}>Simulated: 12 weeks, gradual drift</option></select></div>
+      ${src !== 'live' ? '<div class="banner sim">Simulated data. It shows how the method behaves. It says nothing about clinical accuracy.</div>' : ''}
+      ${S.demo && src === 'live' ? `<div class="controls"><button class="btn small" id="addNormal" type="button">Add simulated normal session</button><button class="btn small" id="addDrift" type="button">Add simulated drifted session</button><button class="btn small" id="resetLive" type="button">Reset live data</button></div>` : ''}
+      ${banner}${a.safetyNet ? '<div class="banner watch">Safety net: the latest symptom answers were high (' + SAFETY_POINTS + ' or more points of 14). Advise a doctor visit regardless of drift.</div>' : ''}
+      <div class="dgrid">${cards}</div>${iot}
+      <div class="panel"><h3>Methods and what this uses</h3>
+        <ul class="plain">
+          <li>Hand tremor: 3-axis accelerometer at 50 Hz, high-pass filter, Hann-windowed spectrum, peak amplitude and power share in the 4 to 6.5 Hz band.</li>
+          <li>Walking: acceleration magnitude, autocorrelation for step and stride regularity (after Moe-Nilssen and Helbostad, 2004), cadence from the stride period.</li>
+          <li>Voice, spiral and tapping: the measures from the first prototype.</li>
+          <li>Drift: each measure as a z-score against the person’s own baseline (with a minimum spread), averaged per area, then a one-sided CUSUM (Page, 1954) with slack 0.5 and limit 4.</li>
+          <li>Resources: browser microphone, touch and motion sensors only. No datasets, AI models or external services. Simulated data comes from synthetic generators in this file.</li>
+        </ul>
+        <p class="fine">Limits: a screening aid, not a diagnosis. Settings are illustrative and not clinically validated. Phone sensors vary between devices, and tiredness, medicines, phone position and other conditions affect results. Clinical validation is required before real use.</p></div>
+      <div class="actions"><button class="btn" id="printBtn" type="button">Print or save summary</button></div></section>`;
+  },
+  mount() {
+    $('#src').addEventListener('change', e => { S.source = e.target.value; render(); });
+    $('#printBtn').addEventListener('click', () => window.print());
+    const an = $('#addNormal'), ad = $('#addDrift'), rs = $('#resetLive');
+    if (an) an.addEventListener('click', () => { simSession(false); render(); });
+    if (ad) ad.addEventListener('click', () => { simSession(true); render(); });
+    if (rs) rs.addEventListener('click', () => { Cloud.sessions.length = 0; Cloud.pending = {}; Bus.log.length = 0; S.sid = 0; render(); });
+  }
+};
+
+render();
+</script>
+</body>
+</html>
