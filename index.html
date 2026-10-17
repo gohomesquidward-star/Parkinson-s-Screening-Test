@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DriftWatch: personal-baseline early screening prototype</title>
+<title>ParkinSense: personal-baseline early screening prototype</title>
 <style>
 :root{
   --ink:#0B2545; --ink2:#3C4E63; --mist:#EEF3F7; --paper:#fff; --line:#CFDBE6;
@@ -539,7 +539,7 @@ function go(name) {
 function shell(inner) {
   const clinic = S.screen === 'clinic';
   return `<div class="wrap">
-    <header class="top"><div class="brand">DriftWatch<small>Personal-baseline early screening. Prototype.</small></div></header>
+    <header class="top"><div class="brand">ParkinSense<small>Personal-baseline early screening. Prototype.</small></div></header>
     <div class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="patient" aria-selected="${!clinic}">Patient</button>
       <button type="button" role="tab" data-tab="clinic" aria-selected="${clinic}">Clinician</button>
@@ -602,7 +602,7 @@ VIEWS.welcome = {
         <svg viewBox="0 0 96 96" aria-hidden="true"><path class="ghost" d="${spiralPath(48, 48, 3, 44, 260)}"/><path class="draw" pathLength="1" d="${spiralPath(48, 48, 3, 44, 260)}"/></svg>
         <div><h1>Track small changes before they become symptoms</h1></div>
       </div>
-      <p class="lead">Six short checks use your phone’s microphone, touch screen and motion sensor. Instead of judging you against other people, DriftWatch compares you with your own baseline over time.</p>
+      <p class="lead">Six short checks use your phone’s microphone, touch screen and motion sensor. Instead of judging you against other people, ParkinSense compares you with your own baseline over time.</p>
       ${!window.isSecureContext ? '<div class="banner watch">This page is open as a local file, so the microphone and motion sensor are blocked here. Host it online and open its https link for the real tests, or turn on Demo helpers below to try the app now.</div>' : ''}
       <div class="panel"><p>This is a screening aid, not a diagnosis. Results are for guidance only. Please see a doctor about any health concern.</p>
         <p>Raw voice, drawing and motion data stay on this device. Only small summary numbers are sent to the clinician dashboard, and in this prototype that dashboard runs inside this page.</p></div>
